@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aggregator, Splitter, Scatter-Gather: Three EIPs That Solve Real Problems in Enterprise AI | Lemexin</title>
+  <meta name="description" content="There is a class of problems in enterprise AI that looks like a modeling problem but is actually an integration problem. When your model needs data from five different systems before it can score a record.">
+  <meta name="theme-color" content="#030b25">
+  <link rel="canonical" href="https://lemexin.com/insights/aggregator-splitter-scatter-gather/">
+  <link rel="icon" type="image/svg+xml" href="/assets/images/lemexin-mark.svg">
+  <meta property="og:title" content="Aggregator, Splitter, Scatter-Gather: Three EIPs That Solve Real Problems in Enterprise AI | Lemexin">
+  <meta property="og:description" content="There is a class of problems in enterprise AI that looks like a modeling problem but is actually an integration problem. When your model needs data from five different systems before it can score a record.">
+  <meta property="og:url" content="https://lemexin.com/insights/aggregator-splitter-scatter-gather/">
+  <meta property="og:type" content="website">
+  <link rel="preload" href="/assets/fonts/manrope-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/assets/css/site.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Aggregator, Splitter, Scatter-Gather: Three EIPs That Solve Real Problems in Enterprise AI","author":{"@type":"Person","name":"Sri Kothagadi"},"datePublished":"Mar 28, 2025","publisher":{"@type":"Organization","name":"Lemexin"}}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="/" aria-label="Lemexin home"><span class="logo"><img class="logo-mark" src="/assets/images/lemexin-mark.svg" width="55" height="34" alt=""><span class="logo-text"><span class="logo-word">lemexin</span></span></span></a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">Menu</button>
+    <nav id="primary-nav" class="nav" aria-label="Primary">
+      <a href="/about/">About</a>
+      <a href="/services/">Services</a>
+      <a href="/industries/">Industries</a>
+      <a href="/solutions/">Solutions</a>
+      <a href="/customers/">Customers</a>
+      <a href="/insights/" aria-current="page">Insights</a>
+      <a href="/careers/">Careers</a>
+      <a class="btn btn-gold nav-cta" href="/contact/">Let&rsquo;s talk &rarr;</a>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<section class="page-banner"><div class="container">
+  <a class="back-link" href="/insights/">&larr; All insights</a>
+  <p class="eyebrow">Mar 28, 2025 / 14 min read</p>
+  <h1>Aggregator, Splitter, Scatter-Gather: Three EIPs That Solve Real Problems in Enterprise AI</h1>
+  <p class="byline">Sri Kothagadi, Lemexin</p>
+</div></section>
+<article class="article container">
+  <p class="article-lede">There is a class of problems in enterprise AI that looks like a modeling problem but is actually an integration problem. When your model needs data from five different systems before it can score a record. When you need to fan out a single request to three different models and reconcile their outputs. When you are processing ten thousand records and need to handle partial failures gracefully. These are integration problems. EIP solved them years ago.</p>
+  <section><h2>Why enterprise AI has an integration problem it does not know it has.</h2><p>The data a model needs to make a good prediction almost never lives in one place. For a customer churn model at a telecom, you need account age from the billing system, usage history from the network system, support ticket count from the CRM, last interaction date from the customer portal, and current plan details from the product catalog. Five systems. Five different APIs or databases, each with their own latency, their own availability profile, their own data format. The data science team built the model assuming clean joined data would arrive. The engineering team is responsible for making that happen in real time, reliably, for every scoring request. This is not a machine learning problem. This is a classic integration problem. Without a pattern, you get what we usually see: a chain of synchronous HTTP calls with no error handling, no timeout logic, and no plan for what happens when one of the five systems is slow.</p></section>
+  <section><h2>The Aggregator: assembling model context from multiple sources.</h2><p>The Aggregator EIP collects related messages from multiple sources and combines them into a single message once a completion condition is met. For an AI scoring pipeline, that condition is having all the features needed to score a record. Take a telecom churn model as an example. A scoring request arrives with a customer ID. The aggregator fires requests to all five upstream systems simultaneously, not sequentially, and waits for responses. When all five respond, it assembles the feature vector and routes it to the model. When one fails or times out, it routes based on whether that feature is required or optional. Required features that are missing go to a dead letter channel. Optional features use a pre-configured default and scoring continues with a data-completeness flag on the output. The model team defined which features were required and which had acceptable defaults. The integration team implemented aggregation and fallback logic. Neither team had to deeply understand the other domain. That is the right separation. Scoring latency falls sharply because you stop waiting for each system to respond before calling the next one.</p></section>
+  <section><h2>The Splitter: handling batches without losing individual accountability.</h2><p>Batch scoring is still a dominant pattern in enterprise AI. You receive a file of ten thousand customer records, need to score all of them, and need to know exactly which failed and why. The naive approach loops through records, calls the model for each, writes results. The problem is error handling becomes an afterthought. If record 4,731 causes an exception, do you stop the batch? Skip silently? Log somewhere nobody checks? The Splitter EIP gives you the answer: split the batch into individual messages at entry, route each independently through the scoring pipeline, reassemble results downstream with an Aggregator. Each message has its own error handling. A failed record goes to a dead letter channel. The rest continues. At the end you have scored records, a failed records report with full payload and error context, and an audit trail for every single one. Consider nightly risk scoring for a health plan's members. Without this pattern, failed records are silently dropped, and nobody knows members are missing risk scores until the clinical team notices gaps in their reports weeks later.</p></section>
+  <section><h2>Scatter-Gather: running multiple models and deciding what to do with the results.</h2><p>As AI programs mature, enterprises often end up with more than one model that could answer a given question. A fraud team might have a rules-based model, a gradient boosting model, and an LLM-based anomaly detector, each with different performance profiles and different strengths. The Scatter-Gather EIP sends the same message to multiple recipients simultaneously, waits for their responses, and processes the combined results. Consider a financial services setting where regulations require both an explainable rules-based model and a higher-accuracy model to agree before blocking high-value transactions. Scatter-Gather makes this straightforward. Both models receive the transaction simultaneously, both return their verdict, reconciliation logic applies the business rule about when disagreement requires escalation. The integration pattern was not just a performance optimization. It was the implementation of a compliance requirement. That is the thing about EIP applied to AI: the patterns often end up being where business rules live, not just plumbing.</p></section>
+  <section><h2>What we keep telling clients about EIP and AI.</h2><p>The engineers who built Enterprise Integration Patterns were solving a problem fundamentally similar to the one enterprise AI teams face today: how do you build reliable, observable, maintainable systems out of components that do not know about each other, have different reliability characteristics, and need to change independently? The answer is the same. Define clear message contracts. Use channels to decouple producers from consumers. Use aggregators to assemble context from multiple sources. Use splitters to process records independently. Use scatter-gather when you need multiple opinions before deciding. Use dead letter channels because things will fail and you need to know about it. None of this ends up in a conference talk about AI breakthroughs. But it is the difference between an AI system that works reliably for three years and one that needs rebuilding after six months because nobody can maintain it. We have seen both. We prefer building the first kind.</p></section>
+  <p class="article-end">Working through something similar? <a class="link-gold" href="/contact/">Get in touch &rarr;</a></p>
+</article>
+</main>
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <a class="brand" href="/" aria-label="Lemexin home"><span class="logo"><img class="logo-mark" src="/assets/images/lemexin-mark.svg" width="55" height="34" alt=""><span class="logo-text"><span class="logo-word">lemexin</span></span></span></a>
+      <p class="footer-blurb">Intelligence engineered. Technology connected.</p>
+    </div>
+    <div>
+      <h2>Services</h2>
+      <ul>
+        <li><a href="/services/">Website &amp; Product Engineering</a></li>
+        <li><a href="/services/">AI &amp; Machine Learning</a></li>
+        <li><a href="/services/">Enterprise Integration</a></li>
+        <li><a href="/services/">Data Engineering</a></li>
+        <li><a href="/services/">Cloud Architecture</a></li>
+        <li><a href="/services/">Digital Transformation</a></li>
+      </ul>
+    </div>
+    <div>
+      <h2>Explore</h2>
+      <ul>
+        <li><a href="/about/">About</a></li>
+        <li><a href="/industries/">Industries</a></li>
+        <li><a href="/solutions/">Solutions</a></li>
+        <li><a href="/customers/">Customers</a></li>
+        <li><a href="/insights/">Insights</a></li>
+        <li><a href="/careers/">Careers</a></li>
+      </ul>
+    </div>
+    <div>
+      <h2>Contact</h2>
+      <ul>
+        <li><a href="mailto:info@lemexin.com">info@lemexin.com</a></li>
+        <li><a href="/contact/">Start a conversation</a></li>
+        <li><a href="/privacy/">Privacy</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bar"><div class="container"><p>&copy; <span data-year>2026</span> Lemexin. All rights reserved.</p></div></div>
+</footer>
+<script src="/assets/js/site.js" defer></script>
+</body>
+</html>

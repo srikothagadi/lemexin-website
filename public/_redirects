@@ -1,0 +1,7 @@
+# Short links and old URLs. Format: from to status
+/blog/*      /insights/:splat   301
+/insights/index.html /insights/ 301
+/work /customers/ 301
+/work/ /customers/ 301
+/company     /about/            301
+/company/    /about/            301

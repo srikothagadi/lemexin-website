@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 330 205" role="img" aria-label="Lemexin">
+  <defs>
+    <linearGradient id="lxA" gradientUnits="userSpaceOnUse" x1="0" y1="38" x2="0" y2="200">
+      <stop offset="0" stop-color="#00e5f5"/><stop offset=".5" stop-color="#00e5f5"/>
+      <stop offset=".5" stop-color="#6a2fd0"/><stop offset="1" stop-color="#6a2fd0"/>
+    </linearGradient>
+    <clipPath id="lxX"><path d="M95 40H150L325 200H268Z"/><path d="M255 38H323L165 200H98Z"/></clipPath>
+  </defs>
+  <path d="M45 0V147H142L98 198H0V47Z" fill="#00e5f5"/>
+  <path d="M255 38H323L165 200H98Z" fill="#6a2fd0"/>
+  <path d="M95 40H150L325 200H268Z" fill="url(#lxA)"/>
+  <rect x="120" y="110" width="190" height="22" fill="#030b25" clip-path="url(#lxX)"/>
+</svg>
